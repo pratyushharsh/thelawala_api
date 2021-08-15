@@ -21,7 +21,6 @@ service: thelawala
 
 plugins:
   - serverless-esbuild
-
 provider:
   name: aws
   runtime: nodejs12.x

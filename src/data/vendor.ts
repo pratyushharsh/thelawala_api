@@ -156,3 +156,37 @@ export const getVendor = async (vendorid: string): Promise<Vendor> => {
         throw e
     }
 }
+
+export const updateVendorLocation = async (vendorid: string, lat: number, lng: number): Promise<void> => {
+    const client = getClient();
+    const vendor = new Vendor(vendorid, "", "", "")
+    const loc = new Location(lat, lng)
+    const timeStamp = new Date().toISOString();
+    try {
+        const config = {
+            TableName: 'THELAWALA',
+            Key: vendor.keys(),
+            ConditionExpression: "attribute_exists(PK)",
+            UpdateExpression: "SET #currentLocation = :currentLocation, #lastLocationUpdateTime = :lastLocationUpdateTime",
+            ExpressionAttributeNames: {
+                "#currentLocation": "currentLocation",
+                "#lastLocationUpdateTime": "lastLocationUpdateTime"
+            },
+            ExpressionAttributeValues: {
+                ":currentLocation": loc.toItem(),
+                ":lastLocationUpdateTime": {
+                    S: timeStamp
+                }
+            },
+            ReturnValues:"UPDATED_NEW"
+        };
+        const resp = await client.updateItem(
+            config
+        ).promise();
+        console.log(resp);
+        // return resp;
+    } catch (e) {
+        console.log(e)
+        throw e
+    }
+}

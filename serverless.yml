@@ -178,6 +178,16 @@ functions:
             name: vendor-authorizer
             arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_yyyeErm0z
 
+  updateVendorLocation:
+    handler: src/handlers/location/updateVendorLocationHandler.main
+    events:
+      - http:
+          path: /vendor/{vendorid}/location
+          method: post
+          authorizer:
+            name: vendor-authorizer
+            arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_yyyeErm0z
+
 resources:
   Resources:
     ThelawalaTable:

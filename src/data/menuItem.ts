@@ -3,6 +3,7 @@ import {DynamoDB} from "aws-sdk";
 import {getClient} from "./client";
 import {executeTransactWrite} from "./utils";
 import {MenuCategory} from "./menuCategory";
+import {Images} from "./image";
 
 export class MenuItem extends Item {
     vendorid: string
@@ -14,11 +15,12 @@ export class MenuItem extends Item {
     description: string
     tags: string[]
     active: boolean
+    image: Images
 
     modifiers: ModifierGroup[]
 
     constructor(vendorid: string, category: string, itemid: string, name?: string, price?: number,
-                description?: string, tags?: string[], active?: boolean, modifiers?: ModifierGroup[]) {
+                description?: string, tags?: string[], active?: boolean, modifiers?: ModifierGroup[], image?: Images) {
         super();
         this.vendorid = vendorid
         this.category = category
@@ -30,6 +32,7 @@ export class MenuItem extends Item {
         this.tags = tags
         this.active = active
         this.modifiers = modifiers
+        this.image = image
     }
 
     get pk(): string {
@@ -43,7 +46,8 @@ export class MenuItem extends Item {
     static fromItem(item?: DynamoDB.AttributeMap): MenuItem {
         if (!item) throw new Error("Category Not Found")
         const modifiers = item.modifiers?.L?.map((e) => ModifierGroup.fromItem(e.M)) || []
-        return new MenuItem(item.vendorid.S, item.category.S, item.itemid.S, item.name.S, Number(item.price.N), item.description.S, item.tags?.SS || [], item.active.BOOL, modifiers)
+        const image = Images.fromItem(item.image?.M) || null
+        return new MenuItem(item.vendorid.S, item.category.S, item.itemid.S, item.name.S, Number(item.price.N), item.description.S, item.tags?.SS || [], item.active.BOOL, modifiers, image)
     }
 
     toItem(): Record<string, unknown> {

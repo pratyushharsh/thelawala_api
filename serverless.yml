@@ -28,6 +28,8 @@ provider:
   memorySize: 256
   stage: dev
   region: ap-south-1
+  layers:
+    - arn:aws:lambda:ap-south-1:189468856814:layer:DependencyLayer:2
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -48,8 +50,16 @@ provider:
         - Fn::GetAtt:
             - ThelawalaTable
             - Arn
+        - Fn::Join:
+            - "/"
+            -
+              - Fn::GetAtt:
+                  - ThelawalaTable
+                  - Arn
+              - "index/*"
   environment:
     TABLE_NAME: { Ref: ThelawalaTable }
+
 
 #  stage: dev
 #  region: us-east-1
@@ -164,6 +174,20 @@ functions:
             name: vendor-authorizer
             arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_yyyeErm0z
 
+  getMenuImageUploadUrl:
+    handler: src/handlers/menu/getSignedUrlForMenuImageUpload.main
+    environment:
+      URL_TYPE: "MENU"
+      BUCKET: "thelawala-images-dev"
+      URL_EXPIRATION_SECONDS: 300
+    events:
+      - http:
+          path: /vendor/{vendorid}/menu/{category}/{itemid}/image
+          method: get
+          authorizer:
+            name: vendor-authorizer
+            arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_yyyeErm0z
+
   getLogoUploadUrl:
     handler: src/handlers/image/logoUploadUrl.main
     environment:
@@ -187,6 +211,26 @@ functions:
           authorizer:
             name: vendor-authorizer
             arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_yyyeErm0z
+
+  searchVendorsLocation:
+    handler: src/handlers/vendor/searchVendor.main
+    events:
+      - http:
+          path: /user/vendors
+          method: get
+          authorizer:
+            name: user-authorizer
+            arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_DSY7AsoXQ
+
+  getMenuByVendorId:
+    handler: src/handlers/menu/getMenuList.main
+    events:
+      - http:
+          path: /user/vendors/{vendorid}/menu
+          method: get
+          authorizer:
+            name: user-authorizer
+            arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_DSY7AsoXQ
 
 resources:
   Resources:

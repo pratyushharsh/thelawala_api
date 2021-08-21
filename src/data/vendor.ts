@@ -2,6 +2,9 @@ import {Item} from "./base";
 import {getClient} from "./client";
 import {DynamoDB} from "aws-sdk";
 import {Images} from "./image";
+import {MenuItem} from "./menuItem";
+let geohash = require('ngeohash');
+
 
 export class Vendor extends Item {
     vendorid: string
@@ -162,21 +165,31 @@ export const updateVendorLocation = async (vendorid: string, lat: number, lng: n
     const vendor = new Vendor(vendorid, "", "", "")
     const loc = new Location(lat, lng)
     const timeStamp = new Date().toISOString();
+    const hash: string = geohash.encode(lat, lng, 9)
+    hash.charAt(0)
     try {
         const config = {
             TableName: 'THELAWALA',
             Key: vendor.keys(),
             ConditionExpression: "attribute_exists(PK)",
-            UpdateExpression: "SET #currentLocation = :currentLocation, #lastLocationUpdateTime = :lastLocationUpdateTime",
+            UpdateExpression: "SET #currentLocation = :currentLocation, #lastLocationUpdateTime = :lastLocationUpdateTime, #geohash = :geohash, #region = :region",
             ExpressionAttributeNames: {
                 "#currentLocation": "currentLocation",
-                "#lastLocationUpdateTime": "lastLocationUpdateTime"
+                "#lastLocationUpdateTime": "lastLocationUpdateTime",
+                "#geohash": "GSI1SK",
+                "#region": "GSI1PK"
             },
             ExpressionAttributeValues: {
                 ":currentLocation": loc.toItem(),
                 ":lastLocationUpdateTime": {
                     S: timeStamp
-                }
+                },
+                ":geohash": {
+                    S: hash
+                },
+                ":region": {
+                    S: hash.charAt(0)
+                },
             },
             ReturnValues:"UPDATED_NEW"
         };
@@ -187,6 +200,29 @@ export const updateVendorLocation = async (vendorid: string, lat: number, lng: n
         // return resp;
     } catch (e) {
         console.log(e)
+        throw e
+    }
+}
+
+export const getVendorsWithinLocation = async () => {
+    const client = getClient();
+
+    try {
+        const resp = await client
+            .query({
+                TableName: process.env.TABLE_NAME,
+                IndexName: "GSI1",
+                KeyConditionExpression: "GSI1PK = :pk and begins_with(GSI1SK, :beginsWith)",
+                ExpressionAttributeValues: {
+                    ":pk": { S: 't' },
+                    ":beginsWith": { S: "tut" }
+                }
+            })
+            .promise()
+        console.log(`******Count: ${resp.Count}  ***************ScannedCount:    ${resp.ScannedCount}    CC:  ${resp.ConsumedCapacity}   *******************`);
+        return resp.Items.map((item) => Vendor.fromItem(item))
+    } catch (e) {
+        console.error(JSON.stringify(e))
         throw e
     }
 }

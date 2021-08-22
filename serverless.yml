@@ -48,6 +48,18 @@ provider:
         - "arn:aws:s3:::thelawala-images-dev"
         - "arn:aws:s3:::thelawala-images-dev/*"
         - Fn::GetAtt:
+            - ThelawalaOrderSequence
+            - Arn
+        - Fn::GetAtt:
+            - ThelawalaOrderTable
+            - Arn
+        - Fn::Join:
+            - "/"
+            - - Fn::GetAtt:
+                  - ThelawalaOrderTable
+                  - Arn
+              - "index/*"
+        - Fn::GetAtt:
             - ThelawalaTable
             - Arn
         - Fn::Join:
@@ -59,6 +71,8 @@ provider:
               - "index/*"
   environment:
     TABLE_NAME: { Ref: ThelawalaTable }
+    ORDER_TABLE_NAME: { Ref: ThelawalaOrderTable }
+    SEQUENCE_TABLE: { Ref: ThelawalaOrderSequence }
 
 
 #  stage: dev
@@ -232,6 +246,16 @@ functions:
             name: user-authorizer
             arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_DSY7AsoXQ
 
+  createOrder:
+    handler: src/handlers/order/createOrder.main
+    events:
+      - http:
+          path: /user/{userid}/order
+          method: post
+          authorizer:
+            name: user-authorizer
+            arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_DSY7AsoXQ
+
 resources:
   Resources:
     ThelawalaTable:
@@ -262,6 +286,64 @@ resources:
                 KeyType: "RANGE"
             Projection:
               ProjectionType: ALL
+
+    ThelawalaOrderTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: THELAWALA_ORDER
+        AttributeDefinitions:
+          - AttributeName: "orderId"
+            AttributeType: "S"
+          - AttributeName: "userId"
+            AttributeType: "S"
+          - AttributeName: "vendorId"
+            AttributeType: "S"
+          - AttributeName: "statusHash"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "orderId"
+            KeyType: "HASH"
+        BillingMode: "PAY_PER_REQUEST"
+        GlobalSecondaryIndexes:
+          - IndexName: 'GSI1'
+            KeySchema:
+              - AttributeName: "userId"
+                KeyType: "HASH"
+              - AttributeName: "statusHash"
+                KeyType: "RANGE"
+            Projection:
+              NonKeyAttributes:
+                - status
+                - orderDate
+                - total
+                - vendorId
+              ProjectionType: INCLUDE
+          - IndexName: 'GSI2'
+            KeySchema:
+              - AttributeName: "vendorId"
+                KeyType: "HASH"
+              - AttributeName: "statusHash"
+                KeyType: "RANGE"
+            Projection:
+              NonKeyAttributes:
+                - status
+                - orderDate
+                - total
+                - userId
+              ProjectionType: INCLUDE
+
+    ThelawalaOrderSequence:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: THELAWALA_SEQUENCE
+        AttributeDefinitions:
+          - AttributeName: "sequenceType"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "sequenceType"
+            KeyType: "HASH"
+        BillingMode: "PAY_PER_REQUEST"
+
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events

@@ -4,40 +4,40 @@ import {nextSequence, Sequence} from "../../data/sequence";
 
 export const main: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent) => {
     console.log(event);
-    const { vendorid } = event.pathParameters
+    const { userid } = event.pathParameters
 
-    const { category, name } = JSON.parse(event.body)
+    const body = JSON.parse(event.body)
+    const { vendorId, total, subtotal, tax, orderCurrency, items } = body
 
     try {
+        const seq: Sequence = await nextSequence(new Sequence('ORDER', null));
 
-        var seq = new Sequence('ORDER', null);
-        const nextSeq = await nextSequence(seq);
-        console.log(nextSeq)
-
-        let lineItem = new OrderItem(
-            '68769',
-            78.99,
-            'TEGREYRUJYT',
-            78.89,
-            8,
-            'TRETRTKUKUNU GDVFJJH'
-        )
+        const lineItems = items.map((itm) => new OrderItem(
+            itm.itemId,
+            itm.price,
+            itm.itemDesc,
+            itm.tax,
+            itm.quantity,
+            itm.imageUrl),)
 
         // Build order request
         let order: Order = new Order(
-            nextSeq.sequenceValue.toString(),
-            "65y6458o79p8",
-            "4565465uiiluygug",
+            seq.sequenceValue.toString(),
+            userid,
+            vendorId,
             new Date().toISOString(),
-            56.78,
-            89.89,
-            0.00,
+            total,
+            subtotal,
+            tax,
             'INR',
             'OPEN',
-            [lineItem]
+            lineItems
         );
 
-        // await createOrder(order);
+        console.log(JSON.stringify(order))
+        console.log(JSON.stringify(order.toItem()))
+
+        await createOrder(order);
 
         return {
             statusCode: 200,

@@ -252,6 +252,12 @@ functions:
       - http:
           path: /user/{userid}/order
           method: post
+          request:
+            schemas:
+              application/json:
+                schema: ${file(validator/order/create-order-request.json)}
+                name: CreateOrderModel
+                description: 'Validation model for Creating Order'
           authorizer:
             name: user-authorizer
             arn: arn:aws:cognito-idp:ap-south-1:189468856814:userpool/ap-south-1_DSY7AsoXQ

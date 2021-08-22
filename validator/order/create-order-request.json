@@ -1,0 +1,87 @@
+{
+  "type": "object",
+  "properties": {
+    "vendorId": {
+      "type": "string"
+    },
+    "total": {
+      "type": "number"
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "tax": {
+      "type": "number"
+    },
+    "orderCurrency": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "itemDesc": {
+              "type": "string"
+            },
+            "tax": {
+              "type": "number"
+            },
+            "quantity": {
+              "type": "integer"
+            },
+            "imageUrl": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "itemId",
+            "price",
+            "itemDesc",
+            "tax",
+            "quantity"
+          ]
+        }
+      ]
+    },
+    "payment": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "paymentID": {
+              "type": "string"
+            },
+            "paymentMode": {
+              "type": "string"
+            },
+            "paymentAmount": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "paymentID",
+            "paymentMode",
+            "paymentAmount"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "vendorId",
+    "total",
+    "subtotal",
+    "tax",
+    "orderCurrency",
+    "items"
+  ]
+}

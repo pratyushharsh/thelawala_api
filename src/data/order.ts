@@ -69,15 +69,15 @@ export class Order {
 export class OrderItem {
     itemId: string
     price: number
-    name: string
+    itemDesc: string
     tax: number
     quantity: number
     imageUrl: string
 
-    constructor(itemId: string, price: number, name: string, tax: number, quantity: number, imageUrl: string) {
+    constructor(itemId: string, price: number, itemDesc: string, tax: number, quantity: number, imageUrl: string) {
         this.itemId = itemId
         this.price = price
-        this.name = name
+        this.itemDesc = itemDesc
         this.tax = tax
         this.quantity = quantity
         this.imageUrl = imageUrl
@@ -88,17 +88,17 @@ export class OrderItem {
             M: {
                 itemId: {S: this.itemId},
                 price: {N: this.price.toString()},
-                name: {S: this.name},
+                itemDesc: {S: this.itemDesc},
                 tax: {N: this.tax.toString()},
                 quantity: {N: this.quantity.toString()},
-                imageUrl: {S: this.imageUrl}
+                imageUrl: this.imageUrl != null ? {S: this.imageUrl} : null
             }
         }
     }
 
     static fromItem(item?: DynamoDB.AttributeMap): OrderItem {
         return new OrderItem(item.itemId.S, Number(item.price.N),
-            item.name.S, Number(item.tax.N), Number(item.quantity.N),
+            item.itemDesc.S, Number(item.tax.N), Number(item.quantity.N),
             item.imageUrl?.S)
     }
 }
